@@ -6,7 +6,7 @@ function main() {
     console.log("running");
     const tokenizer = new Tokenizer(text);
     tokenizer.run();
-    console.log(tokenizer.tokens);
+    console.log("Tokenizer results", tokenizer.tokens);
 }
 
 main();

@@ -1,0 +1,19 @@
+<script server>
+    const list = db.getList();
+
+    return { list };
+</script>
+
+<script>
+    let last_name = "world";
+</script>
+
+<component name="Header">
+    <client>
+        <h1>Hewwo {last_name}</h1>
+    </client>
+
+    <server>
+        <div>{list}</div>
+    </server>
+</component>
