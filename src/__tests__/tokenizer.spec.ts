@@ -1,11 +1,11 @@
 import { expect, test } from "vitest";
-import { Tokenizer, State } from "../parser";
-import fs from "fs";
+import { Tokenizer } from "../parser";
 import { StartTagToken, TokenType } from "../parser/token";
 
 const text = `
     <component name="Header" lazy={is_mobile} server>
         <div client class="container" title={is_mobile ? "Mobile" : "Desktop"}>
+            <MyComponent />
             <h1>Hewwo {last_name}</h1>
         </div>
     </component>
@@ -17,7 +17,7 @@ test("Initialize tokenizer", () => {
     expect(tokenizer.tokens.length).toBeGreaterThan(0);
 });
 
-test("Test component start and end tag", () => {
+test("Test start and end tag", () => {
     const tokenizer = new Tokenizer(text);
     tokenizer.run();
     expect(tokenizer.tokens[0].type).toBe(TokenType.StartTag);
@@ -29,6 +29,22 @@ test("Test component start and end tag", () => {
     expect(tokenizer.tokens[tokenizer.tokens.length - 2].name).toBe(
         "component",
     );
+
+    expect(tokenizer.tokens[1].type).toBe(TokenType.StartTag);
+    expect(tokenizer.tokens[1].name).toBe("div");
+    expect(tokenizer.tokens[tokenizer.tokens.length - 3].type).toBe(
+        TokenType.EndTag,
+    );
+    expect(tokenizer.tokens[tokenizer.tokens.length - 3].name).toBe("div");
+});
+
+test("Self closing tags", () => {
+    const tokenizer = new Tokenizer(text);
+    tokenizer.run();
+    console.log(tokenizer.tokens[2]);
+    expect(tokenizer.tokens[2].type).toBe(TokenType.StartTag);
+    expect(tokenizer.tokens[2].name).toBe("MyComponent");
+    expect(tokenizer.tokens[2].self_closing).toBe(true);
 });
 
 test("Literal attributes", () => {

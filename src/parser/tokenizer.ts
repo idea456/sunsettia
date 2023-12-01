@@ -31,10 +31,6 @@ export class Tokenizer {
         this.stack = [];
     }
 
-    private isEnd() {
-        return this.current >= this.text.length;
-    }
-
     private isAsciiAlpha(c: string) {
         return (
             (c >= "A" && c <= "Z") ||
@@ -50,11 +46,6 @@ export class Tokenizer {
 
     private peek() {
         return this.text[this.current];
-    }
-
-    private previous() {
-        if (this.current > 0) return this.text[this.current - 1];
-        return this.text[0];
     }
 
     private next() {
