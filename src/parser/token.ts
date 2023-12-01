@@ -16,8 +16,8 @@ export interface Token {
 export type Attribute = {
     name: string;
     value?: string;
-    is_expression?: boolean;
-    is_self_closing?: boolean;
+    is_expression: boolean;
+    is_self_closing: boolean;
 };
 
 export type Expression = string;

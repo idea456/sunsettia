@@ -15,6 +15,7 @@ export class Tokenizer {
     text: string;
     current: number;
     state: State;
+    stack: Token[];
     tokens: Token[];
     currentToken: Token | null;
     current_attribute: Attribute | null;
@@ -27,6 +28,7 @@ export class Tokenizer {
         this.state = State.Data;
         this.tokens = [];
         this.should_reconsume = true;
+        this.stack = [];
     }
 
     private isEnd() {
@@ -48,6 +50,11 @@ export class Tokenizer {
 
     private peek() {
         return this.text[this.current];
+    }
+
+    private previous() {
+        if (this.current > 0) return this.text[this.current - 1];
+        return this.text[0];
     }
 
     private next() {
@@ -83,7 +90,15 @@ export class Tokenizer {
 
     private emitToken() {
         console.log("Token emitted", this.currentToken);
-        if (this.currentToken) this.tokens.push(this.currentToken);
+        if (this.currentToken) {
+            this.tokens.push(this.currentToken);
+            if (this.currentToken.type === TokenType.StartTag) {
+                this.stack.push(this.currentToken);
+            } else if (this.currentToken.type === TokenType.EndTag) {
+                // TODO: check start and end tag matching
+                this.stack.pop();
+            }
+        }
         this.currentToken = null;
     }
 
@@ -92,7 +107,7 @@ export class Tokenizer {
             this.currentToken instanceof StartTagToken &&
             this.current_attribute
         ) {
-            if (this.current_attribute.value) {
+            if (this.current_value) {
                 this.current_attribute.value = this.current_value;
                 this.current_value = null;
             }
@@ -114,7 +129,12 @@ export class Tokenizer {
                     this.emitToken();
                     return;
                 } else {
-                    if (!["\t", "\n"].includes(current_char)) {
+                    if (
+                        (current_char === " " &&
+                            this.tokens[this.tokens.length - 1]?.type ===
+                                TokenType.Character) ||
+                        !["\t", "\n", " "].includes(current_char)
+                    ) {
                         this.currentToken = new CharacterToken(current_char);
                         this.emitToken();
                     }
@@ -160,6 +180,14 @@ export class Tokenizer {
                     this.switch(State.TagName);
                 }
                 break;
+            case State.SelfClosingStartTag:
+                current_char = this.consume();
+                if (current_char === ">") {
+                    this.currentToken.self_closing = true;
+                    this.emitToken();
+                    this.switch(State.Data);
+                }
+                break;
             case State.BeforeAttributeName:
                 current_char = this.consume();
 
@@ -176,6 +204,8 @@ export class Tokenizer {
                 this.current_attribute = {
                     name: current_char,
                     value: "",
+                    is_expression: false,
+                    is_self_closing: false,
                 };
                 // this.should_reconsume = true;
                 this.switch(State.AttributeName);
@@ -185,7 +215,8 @@ export class Tokenizer {
                 current_char = this.consume();
                 if (
                     current_char === ">" ||
-                    this.isWhitespace(current_char) ||
+                    current_char === " " ||
+                    // this.isWhitespace(current_char) ||
                     current_char === "/"
                 ) {
                     this.should_reconsume = true;
@@ -199,12 +230,20 @@ export class Tokenizer {
                 }
                 break;
             case State.AfterAttributeName:
+                if (this.current_attribute)
+                    this.current_attribute.is_self_closing = true;
                 current_char = this.consume();
 
                 if (current_char === ">") {
                     this.emitAttribute();
                     this.emitToken();
                     this.switch(State.Data);
+                } else if (current_char === "/") {
+                    this.switch(State.SelfClosingStartTag);
+                } else if (current_char === " ") {
+                    this.emitAttribute();
+                    this.current_attribute = null;
+                    this.switch(State.BeforeAttributeName);
                 }
                 break;
             case State.BeforeAttributeValue:
@@ -278,11 +317,8 @@ export class Tokenizer {
                 current_char = this.consume();
                 if (current_char === ">") {
                     if (this.current_attribute) {
-                        this.current_attribute.value = this.current_value;
-                        this.current_value = null;
-                        this.currentToken.attributes.push(
-                            this.current_attribute,
-                        );
+                        this.current_attribute.is_expression = true;
+                        this.emitAttribute();
                     }
                     this.emitToken();
                     this.switch(State.Data);
