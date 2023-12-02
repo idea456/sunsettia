@@ -12,4 +12,5 @@ export enum State {
     AttributeValueExpression = "AttributeValueExpression",
     AfterAttributeValueQuoted = "AfterAttributeValueQuoted",
     AfterAttributeValueExpression = "AfterAttributeValueExpression",
+    End = "End",
 }
