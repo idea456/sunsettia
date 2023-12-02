@@ -1,11 +1,10 @@
-import { Tokenizer } from "./parser";
+import { Tokenizer, Parser } from "./parser";
 import fs from "fs";
 
-function main() {
+async function main() {
     const text = fs.readFileSync("index.html", "utf-8");
-    const tokenizer = new Tokenizer(text);
-    tokenizer.run();
-    console.log("Tokenizer results");
+    const parser = new Parser(text);
+    await parser.parse();
 }
 
 main();

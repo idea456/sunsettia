@@ -1,4 +1,4 @@
-import stream from "stream";
+import stream, { EventEmitter } from "stream";
 import { once } from "events";
 import { State } from "./state";
 import {
@@ -14,30 +14,17 @@ import {
 
 const EOF = "#";
 
-class TokenStream extends stream.Readable {
+export class TokenStream extends stream.Readable {
     _read() {}
-}
 
-class TreeBuilder {
-    token_stream: TokenStream;
-    ast: Object | null;
-    stack: StartTagToken[];
-
-    constructor(token_stream: TokenStream) {
-        this.token_stream = token_stream;
-        this.stack = [];
-        this.ast = {};
+    done() {
+        this.emit("end");
     }
 
-    async process() {
-        this.token_stream.on("data", (c) => {
-            const token = JSON.parse(c.toString("utf-8")) as Token;
-            if (token.type === TokenType.StartTag) {
-                this.stack.push();
-            }
+    process() {
+        return new Promise((resolve) => {
+            this.on("end", resolve);
         });
-        await once(this.token_stream, "finish");
-        console.log("Tree building finished!");
     }
 }
 
@@ -51,8 +38,8 @@ export class Tokenizer {
     current_attribute: Attribute | null = null;
     current_value: Expression | string | null = null;
     should_reconsume: boolean;
-    builder: TreeBuilder;
-    stream: TokenStream;
+    //  stream: TokenStream;
+    emitter: EventEmitter;
 
     constructor(text: string) {
         this.text = text + "#";
@@ -61,9 +48,7 @@ export class Tokenizer {
         this.tokens = [];
         this.should_reconsume = true;
         this.stack = [];
-        this.stream = new TokenStream();
-        this.builder = new TreeBuilder(this.stream);
-        this.builder.process();
+        this.emitter = new EventEmitter();
     }
 
     private isAsciiAlpha(c: string) {
@@ -116,7 +101,8 @@ export class Tokenizer {
 
     private emitToken() {
         console.log("Token emitted", this.current_token);
-        this.stream.push(JSON.stringify(this.current_token), "utf-8");
+        // this.stream.push(JSON.stringify(this.current_token), "utf-8");
+        this.emitter.emit("data", this.current_token);
         if (this.current_token) {
             this.tokens.push(this.current_token);
             if (this.current_token.type === TokenType.StartTag) {
@@ -143,7 +129,7 @@ export class Tokenizer {
         }
     }
 
-    run() {
+    async run() {
         let current_char;
         console.log(`[${this.state}]`, this.peek());
         switch (this.state) {
@@ -371,7 +357,7 @@ export class Tokenizer {
                 }
                 break;
             case State.End:
-                console.log("done");
+                this.emitToken();
                 return;
         }
     }

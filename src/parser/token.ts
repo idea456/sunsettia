@@ -3,7 +3,6 @@ export enum TokenType {
     EndTag,
     Comment,
     Character,
-    Component,
     EOF,
 }
 
@@ -27,10 +26,7 @@ export class StartTagToken implements Token {
     // Start and end tag tokens have a tag name, a self-closing flag, and a list of attributes, each of which has a name and a value.
     constructor(
         public name: string,
-        public type:
-            | TokenType.StartTag
-            | TokenType.EndTag
-            | TokenType.Component,
+        public type: TokenType.StartTag | TokenType.EndTag,
         public self_closing: boolean,
         public attributes: Attribute[],
     ) {}
