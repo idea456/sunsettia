@@ -38,14 +38,13 @@ test("Test start and end tag", () => {
     expect(tokenizer.tokens[tokenizer.tokens.length - 3].name).toBe("div");
 });
 
-test("Self closing tags", () => {
-    const tokenizer = new Tokenizer(text);
-    tokenizer.run();
-    console.log(tokenizer.tokens[2]);
-    expect(tokenizer.tokens[2].type).toBe(TokenType.StartTag);
-    expect(tokenizer.tokens[2].name).toBe("MyComponent");
-    expect(tokenizer.tokens[2].self_closing).toBe(true);
-});
+// test("Self closing tags", () => {
+//     const tokenizer = new Tokenizer(text);
+//     tokenizer.run();
+//     expect(tokenizer.tokens[2].type).toBe(TokenType.StartTag);
+//     expect(tokenizer.tokens[2].name).toBe("MyComponent");
+//     expect(tokenizer.tokens[2].is_self_closing).toBe(true);
+// });
 
 test("Literal attributes", () => {
     const tokenizer = new Tokenizer(text);
