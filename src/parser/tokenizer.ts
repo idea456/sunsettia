@@ -38,7 +38,7 @@ export class Tokenizer {
     current_attribute: Attribute | null = null;
     current_value: Expression | string | null = null;
     should_reconsume: boolean;
-    //  stream: TokenStream;
+    is_carriage_return: boolean;
     emitter: EventEmitter;
 
     constructor(text: string) {
@@ -49,6 +49,7 @@ export class Tokenizer {
         this.should_reconsume = true;
         this.stack = [];
         this.emitter = new EventEmitter();
+        this.is_carriage_return = false;
     }
 
     private isAsciiAlpha(c: string) {
@@ -142,10 +143,19 @@ export class Tokenizer {
                     this.emitToken();
                     this.switch(State.End);
                 } else {
+                    if (current_char === "\n") {
+                        this.is_carriage_return = true;
+                    }
+
                     if (
-                        (current_char === " " &&
-                            this.tokens[this.tokens.length - 1]?.type ===
-                                TokenType.Character) ||
+                        !this.isWhitespace(current_char) &&
+                        this.is_carriage_return
+                    ) {
+                        this.is_carriage_return = false;
+                    }
+                    if (
+                        ([" "].includes(current_char) &&
+                            !this.is_carriage_return) ||
                         !["\t", "\n", " "].includes(current_char)
                     ) {
                         this.current_token = new CharacterToken(current_char);

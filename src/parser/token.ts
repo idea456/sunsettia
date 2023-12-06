@@ -1,9 +1,10 @@
 export enum TokenType {
-    StartTag,
-    EndTag,
-    Comment,
-    Character,
-    EOF,
+    StartTag = "StartTag",
+    EndTag = "EndTag",
+    ScriptTag = "ScriptTag",
+    Comment = "Comment",
+    Character = "Character",
+    EOF = "EOF",
 }
 
 export interface Token {

@@ -3,6 +3,7 @@ export enum State {
     TagOpen = "TagOpen",
     EndTagOpen = "EndTagOpen",
     TagName = "TagName",
+    InScriptTag = "InScriptTag",
     SelfClosingStartTag = "SelfClosingStartTag",
     BeforeAttributeName = "BeforeAttributeName",
     AttributeName = "AttributeName",

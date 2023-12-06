@@ -1,0 +1,16 @@
+<script>
+    import HeaderTags from './HeaderTags'
+
+    export let last_name = 'me'
+    export let first_name = 'test'
+</script>
+
+<component name="Header">
+    <div server sun-if={has_hamburger}>
+        <h1>Hewwo {last_name}</h1>
+    </client>
+
+    <div ss:if={!has_hamburger}>
+        <HeaderTags />
+    </div>
+</component>

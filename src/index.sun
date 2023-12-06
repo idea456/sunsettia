@@ -1,0 +1,17 @@
+<script>
+    let num = 0;
+    let name = "Hello";
+    let title = name === "Hello" ? "Hi" : "Hello there";
+
+    function onClick() {
+        num += 1
+    }
+</script>
+
+<component name="Counter">
+    <div>
+        The current number is {num}
+    </div>
+    <h2>{num === 0 ? 'Nothing' : 'Something'}</h2>
+    <button @click={onClick}>Submit</button>
+</component>

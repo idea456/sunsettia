@@ -5,7 +5,7 @@ import { StartTagToken, TokenType } from "../parser/token";
 const text = `
     <component name="Header" lazy={is_mobile} server>
         <div client class="container" title={is_mobile ? "Mobile" : "Desktop"}>
-            <MyComponent />
+            <MyComponent lazy/>
             <h1>Hewwo {last_name}</h1>
         </div>
     </component>
@@ -39,6 +39,15 @@ test("Test start and end tag", () => {
 });
 
 // test("Self closing tags", () => {
+//     const tokenizer = new Tokenizer(text);
+//     tokenizer.run();
+//     expect(tokenizer.tokens[2].type).toBe(TokenType.StartTag);
+//     expect(tokenizer.tokens[2].name).toBe("MyComponent");
+//     expect(tokenizer.tokens[2].is_self_closing).toBe(true);
+// });
+
+// TODO: Test <MyComponent lazy/> and <SomeComponent lazy />
+// test("Self closing tags with attributes", () => {
 //     const tokenizer = new Tokenizer(text);
 //     tokenizer.run();
 //     expect(tokenizer.tokens[2].type).toBe(TokenType.StartTag);
