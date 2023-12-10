@@ -65,7 +65,6 @@ export class Parser {
         this.tokenizer.emitter.on("data", (data) => {
             const token = data as Token;
             if (token) {
-                console.log("i have token", token);
                 // if (token.type === TokenType.StartTag) {
                 //     this.stack.push();
                 // }
@@ -79,10 +78,6 @@ export class Parser {
         });
         this.tokenizer.run();
         await this.wait();
-
-        console.log(
-            util.inspect(this.ast, false, null, true /* enable colors */),
-        );
     }
 
     process(token: Token) {
@@ -139,13 +134,16 @@ export class Parser {
                 if (token.type === TokenType.Character) {
                     if (!this.current_text)
                         this.current_text = {
+                            name: "text",
                             value: "",
                             type: NodeType.Text,
                         };
                     if (token.literal === "}") {
                         if (this.current_raw_expression) {
                             const expression_node: ExpressionNode = {
+                                name: "expression",
                                 type: NodeType.Expression,
+                                value: this.current_raw_expression,
                                 expression: acorn.parseExpressionAt(
                                     this.current_raw_expression,
                                     0,

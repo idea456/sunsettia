@@ -24,12 +24,15 @@ export interface TagNode {
 }
 
 export interface TextNode {
+    name: "text";
     type: NodeType.Text;
     value: string;
 }
 
 export interface ExpressionNode {
+    name: "expression";
     type: NodeType.Expression;
+    value: string;
     expression: Expression;
     raw: string;
 }
