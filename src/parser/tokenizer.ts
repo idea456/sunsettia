@@ -1,7 +1,7 @@
 import stream, { EventEmitter } from "stream";
-import { once } from "events";
-import { State } from "./state";
+
 import {
+    State,
     Attribute,
     CharacterToken,
     EOFToken,
@@ -10,7 +10,7 @@ import {
     StartTagToken,
     Token,
     TokenType,
-} from "./token";
+} from "types";
 
 const EOF = "#";
 

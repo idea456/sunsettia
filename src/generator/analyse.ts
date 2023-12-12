@@ -1,4 +1,4 @@
-import { Program } from "../parser/nodes";
+import { Program } from "types";
 import acorn, { Expression } from "acorn";
 import walk from "acorn-walk";
 import escodegen from "escodegen";
@@ -23,11 +23,6 @@ type Assignment = {
 export default function analyse(code: string) {
     let declarations: Declaration[] = [];
     let assignments: Assignment[] = [];
-    // let declarations: Map<string, Declaration> = new Map();
-    // let assignments: Map<string, Assignment> = new Map();
-
-    // let mutationMap: Map<string, Assignment[]> = new Map()
-
     // const code = appendSemicolons(rawCode);
     const tree = acorn.parse(code, {
         ecmaVersion: "latest",

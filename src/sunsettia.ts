@@ -1,4 +1,4 @@
-import { Node, NodeType, TextNode } from "./parser/nodes";
+import { Node, NodeType, TextNode } from "types";
 
 class Sunsettia {
     constructor() {}

@@ -1,4 +1,4 @@
-<script server>
+<script>
     const list = db.getList();
 
     return { list };
@@ -9,10 +9,6 @@
 </script>
 
 <component name="Header">
-    <client>
-        <h1>Hewwo {last_name}</h1>
-    </client>
-
     <server>
         <div>{list}</div>
     </server>

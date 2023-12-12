@@ -1,4 +1,4 @@
-import { Component, Node, NodeType, Program, TextNode } from "../parser/nodes";
+import { Component, Node, NodeType, Program, TextNode } from "types";
 import acorn, { Expression } from "acorn";
 import walk from "acorn-walk";
 import analyse, { analyseDependencies } from "./analyse";
