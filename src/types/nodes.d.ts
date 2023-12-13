@@ -16,25 +16,51 @@ export enum NodeType {
     Expression = "Expression",
 }
 
-export interface TagNode {
+export interface NodeVisitor {
+    code: string[];
+
+    visitEvents(node: TagNode): void;
+    visitExpression(node: ExpressionNode): void;
+    visitTag(node: TagNode): void;
+    visitText(node: TextNode): void;
+    visitStyles(node: TagNode): void;
+}
+
+export interface Visitable {
+    accept(visitor: NodeVisitor): void;
+}
+
+export interface VisitableNode extends Visitable {
+    type: NodeType;
+
+    child?: VisitableNode;
+    sibling?: VisitableNode;
+    return?: VisitableNode;
+
+    children?: VisitableNode[];
+
+    accept(visitor: NodeVisitor): void;
+}
+
+export interface VisitableTagNode extends VisitableNode {
     name: string;
     type: NodeType.Tag;
-    children: Node[];
+    children: VisitableNode[];
     attributes: Attribute[];
 }
 
-export interface TextNode {
-    name: "text";
+export interface VisitableTextNode extends VisitableNode {
     type: NodeType.Text;
     value: string;
 }
 
-export interface ExpressionNode {
-    name: "expression";
+export interface VisitableExpressionNode extends VisitableNode {
     type: NodeType.Expression;
-    value: string;
     expression: Expression;
     raw: string;
 }
 
-export type Node = TagNode | TextNode | ExpressionNode;
+export type Node =
+    | VisitableTagNode
+    | VisitableTextNode
+    | VisitableExpressionNode;

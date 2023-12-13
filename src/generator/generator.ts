@@ -1,24 +1,75 @@
-import { Component, Node, NodeType, Program, TextNode } from "types";
-import acorn, { Expression } from "acorn";
-import walk from "acorn-walk";
+import { Node, NodeType, Program, TextNode } from "types";
 import analyse, { analyseDependencies } from "./analyse";
+import acorn from "acorn";
 
-type Pulp = {
-    // node: Node;
-    name: string;
-    type: NodeType;
-    value?: string;
-    expression?: Expression;
-    // props:
-    parent?: Pulp;
-    sibling?: Pulp;
-    children?: Pulp[];
-    alternate?: Pulp;
-};
+interface NodeVisitor {
+    code: string[];
 
-type PulpTree = {
-    body: Pulp;
-};
+    visitEvents(eventName: string, expression: null): void;
+    visitExpression(expression: acorn.Expression): void;
+    visitTag(): void;
+    visitText(): void;
+    visitStyles(): void;
+}
+
+interface VisitableNode {
+    accept(visitor: NodeVisitor): void;
+}
+
+class ExpressionNode implements VisitableNode {
+    expression: acorn.Expression;
+
+    constructor(public raw: string) {
+        this.expression = acorn.parseExpressionAt(raw, 0, {
+            ecmaVersion: "latest",
+        });
+    }
+
+    accept(visitor: NodeVisitor) {
+        visitor.visitExpression(this.expression);
+    }
+}
+
+class StyleNode implements VisitableNode {
+    constructor(public raw: string) {}
+
+    accept(visitor: NodeVisitor): void {
+        visitor.visitStyles();
+    }
+}
+
+class EventNode implements VisitableNode {
+    constructor(public name: string) {}
+
+    accept(visitor: NodeVisitor) {
+        visitor.visitEvents(this.name, null);
+    }
+}
+
+class TagNode implements VisitableNode {
+    constructor(public name: string) {}
+
+    accept(visitor: NodeVisitor): void {
+        visitor.visitTag();
+    }
+}
+
+class TextNode implements VisitableNode {
+    constructor(public raw: string) {}
+
+    accept(visitor: NodeVisitor): void {
+        visitor.visitText();
+    }
+}
+
+class NodeVisitor implements NodeVisitor {}
+
+class Generator {
+    constructor() {
+        this.visitor = new NodeVisitor();
+    }
+    traverse();
+}
 
 export class Generator {
     code: string[];
@@ -27,7 +78,6 @@ export class Generator {
     counter: number;
     subscriptions: Map<string, string[]>;
     variables: string[];
-    tree?: PulpTree;
 
     constructor(ast: Program) {
         this.ast = ast;
@@ -62,35 +112,6 @@ export class Generator {
 
     analyse() {
         return analyse(this.ast.code);
-    }
-
-    construct() {
-        const traverse = (current_node: Node) => {
-            let pulp: Pulp = {
-                name: current_node.name,
-                type: current_node.type,
-                value: current_node?.value,
-                expression: current_node?.expression,
-
-                children: [],
-            };
-
-            if (current_node?.children?.length > 0) {
-                for (let i = 0; i < current_node.children.length; i++) {
-                    const child_pulp = traverse(current_node.children[i]);
-                    child_pulp.parent = pulp;
-                    if (pulp.children.length >= 1) {
-                        pulp.children[pulp.children.length - 1].sibling =
-                            child_pulp;
-                    }
-                    pulp.children.push(child_pulp);
-                }
-            }
-
-            return pulp;
-        };
-
-        return traverse(this.ast.component);
     }
 
     generate(current_node: Node) {

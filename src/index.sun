@@ -22,6 +22,10 @@
     <div>
         <h1>
             The current number is {num}
+            <div>
+                <h4>Lmao</h4>
+                {num}
+            </div>
         </h1>
         <h2>{num === 0 ? 'Got nothing' : 'We have something'}</h2>
         <h3>Has resetted? {hasClickedReset ? 'Yes' : 'Not yet'}</h3>

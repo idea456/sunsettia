@@ -1,14 +1,14 @@
-import { CharacterToken, StartTagToken, Token, TokenType } from "types";
-import { Tokenizer } from "./tokenizer";
 import {
-    ExpressionNode,
-    Node,
+    CharacterToken,
+    StartTagToken,
+    Token,
+    TokenType,
     NodeType,
     Program,
-    TagNode,
-    TextNode,
+    Node,
 } from "types";
-import acorn from "acorn";
+import { Tokenizer } from "./tokenizer";
+import { ExpressionNode, TagNode, TextNode } from "./nodes";
 
 export enum ParseMode {
     Init = "Init",
@@ -20,13 +20,13 @@ export enum ParseMode {
 }
 
 export class Parser {
-    ast?: Program;
+    ast: Program;
     mode: ParseMode;
     tokenizer: Tokenizer;
     stack: Node[];
     reprocess: boolean;
     current_text: TextNode | null;
-    current_raw_expression: ExpressionNode["raw"];
+    current_raw_expression: string;
     constructor(text: string) {
         this.tokenizer = new Tokenizer(text);
         this.mode = ParseMode.Init;
@@ -86,12 +86,9 @@ export class Parser {
                     const current_token = token as StartTagToken;
                     if (token.name === "component") {
                         // initialize the component docoument
-                        this.stack.push({
-                            name: current_token.name,
-                            type: NodeType.Tag,
-                            attributes: current_token.attributes,
-                            children: [],
-                        });
+                        this.stack.push(
+                            new TagNode("component", current_token.attributes),
+                        );
                         this.ast.component = this.current_node;
                         this.switchMode(ParseMode.InComponent);
                     } else if (token.name === "script") {
@@ -111,18 +108,11 @@ export class Parser {
                 break;
             case ParseMode.InExpression:
                 if (token.literal === "}") {
-                    const expression_node: ExpressionNode = {
-                        type: NodeType.Expression,
-                        expression: acorn.parseExpressionAt(
-                            this.current_raw_expression,
-                            0,
-                            {
-                                ecmaVersion: "latest",
-                            },
-                        ),
-                        raw: this.current_raw_expression,
-                    };
-                    this.appendToParent(expression_node);
+                    const node = new ExpressionNode(
+                        this.current_raw_expression,
+                    );
+
+                    this.appendToParent(node);
                     this.current_raw_expression = "";
                     this.switchMode(ParseMode.InComponent);
                 } else {
@@ -132,27 +122,13 @@ export class Parser {
             case ParseMode.InComponent:
                 if (token.type === TokenType.Character) {
                     if (!this.current_text)
-                        this.current_text = {
-                            name: "text",
-                            value: "",
-                            type: NodeType.Text,
-                        };
+                        this.current_text = new TextNode("");
                     if (token.literal === "}") {
                         if (this.current_raw_expression) {
-                            const expression_node: ExpressionNode = {
-                                name: "expression",
-                                type: NodeType.Expression,
-                                value: this.current_raw_expression,
-                                expression: acorn.parseExpressionAt(
-                                    this.current_raw_expression,
-                                    0,
-                                    {
-                                        ecmaVersion: "latest",
-                                    },
-                                ),
-                                raw: this.current_raw_expression,
-                            };
-                            this.appendToParent(expression_node);
+                            const node = new ExpressionNode(
+                                this.current_raw_expression,
+                            );
+                            this.appendToParent(node);
                             this.current_raw_expression = "";
                         }
                     } else {
@@ -169,16 +145,14 @@ export class Parser {
                     }
                 } else if (token.type === TokenType.StartTag) {
                     const current_token = token as StartTagToken;
-                    if (this.current_text) {
+                    if (this.current_text?.value) {
                         this.appendToParent(this.current_text);
                         this.current_text = null;
                     }
-                    const node: Node = {
-                        name: current_token.name,
-                        type: NodeType.Tag,
-                        children: [],
-                        attributes: current_token.attributes,
-                    };
+                    const node = new TagNode(
+                        current_token.name,
+                        current_token.attributes,
+                    );
 
                     if (current_token.self_closing) {
                         this.appendToParent(node);
@@ -186,10 +160,13 @@ export class Parser {
                         this.stack.push(node);
                     }
                 } else if (token.type === TokenType.EndTag) {
-                    if (this.current_node?.name !== token.name) {
+                    if (
+                        this.current_node?.type === NodeType.Tag &&
+                        this.current_node?.name !== token.name
+                    ) {
                         // TODO: throw end tag does not match start tag error
                     }
-                    if (this.current_text) {
+                    if (this.current_text?.value) {
                         this.appendToParent(this.current_text);
                         this.current_text = null;
                     }
