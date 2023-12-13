@@ -10,7 +10,7 @@ import {
 import { Tokenizer } from "./tokenizer";
 import { ExpressionNode, TagNode, TextNode } from "./nodes";
 
-export enum ParseMode {
+enum ParseMode {
     Init = "Init",
     InScript = "InScript",
     InExpression = "InExpression",

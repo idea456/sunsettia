@@ -1,4 +1,4 @@
-import { Program } from "types";
+import { NodeType, Program, VisitableNode, VisitableTagNode } from "types";
 import acorn, { Expression } from "acorn";
 import walk from "acorn-walk";
 import escodegen from "escodegen";
@@ -88,6 +88,45 @@ export function analyseDependencies(expression: Expression) {
     });
 
     return dependencies;
+}
+
+/**
+ * Implement tree traversal for rendering using React's fiber tree traversal way of singly-linked pointers.
+ * This allows a way to emulate the call stack and pause/resume execution of traversal without relying on recursion's call stack.
+ * This relies on three pointers:
+ * - child: points to the next immediate children
+ * - sibling: points to the next immediate sibling node
+ * - return: points to the parent
+ */
+export function link(ast: VisitableTagNode) {
+    let current_parent: VisitableNode = ast;
+
+    const traverse = (current_node: VisitableNode) => {
+        if (current_node !== current_parent)
+            current_node.return = current_parent;
+
+        if (current_node.children?.length) {
+            current_node.child = current_node.children[0];
+            current_node.children?.reduceRight(
+                (
+                    rightNode: VisitableNode | undefined,
+                    leftNode: VisitableNode,
+                ) => {
+                    leftNode.sibling = rightNode;
+                    return leftNode;
+                },
+                undefined,
+            );
+            current_parent = current_node;
+            for (let i = 0; i < current_node.children.length; i++) {
+                traverse(current_node.children[i]);
+            }
+        }
+
+        return current_node;
+    };
+
+    return traverse(ast);
 }
 
 // export function appendSemicolons(code: string) {

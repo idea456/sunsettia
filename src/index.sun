@@ -14,23 +14,16 @@
     }
 
     function onChange(e) {
-        console.log('typingss...', e)
+        console.log("typingss...", e);
     }
 </script>
 
 <component name="Counter">
     <div>
-        <h1>
-            The current number is {num}
-            <div>
-                <h4>Lmao</h4>
-                {num}
-            </div>
-        </h1>
-        <h2>{num === 0 ? 'Got nothing' : 'We have something'}</h2>
-        <h3>Has resetted? {hasClickedReset ? 'Yes' : 'Not yet'}</h3>
+        <div>Is number zero? {num === 0 ? 'Yea' : 'Nope'}</div>
+        <div>{num}</div>
     </div>
-    <button @click={onClick}>Submit</button>
-    <button @click={onClickReset}>Reset</button>
-    <input @change={onChange}></input>
+    <h1>B</h1>
+    <h4>C</h4>
+    <button @click={onClick}>Lmao</button>
 </component>
