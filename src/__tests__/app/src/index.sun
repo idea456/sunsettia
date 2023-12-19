@@ -1,0 +1,48 @@
+<script>
+    import Header from './components/Header.sun';
+    import Footer from './components/Footer.sun';
+
+    let num = 0;
+    let name = "Hello";
+    let title = name === "Hello" ? "Hi" : "Hello there";
+    let hasClickedReset = false;
+    let value = "";
+
+    function onClick() {
+        num += 1;
+    }
+
+    function onClickReset() {
+        num = 0;
+        hasClickedReset = true;
+    }
+
+    function onChange(e) {
+        let num = 0;
+        value = e.target.value;
+        console.log('typed value', value);
+
+        const someFn = () => {
+            num += 1;
+            console.log('current num is', num);
+        };
+
+        someFn();
+    }
+</script>
+
+<component name="Counter">
+    <Header />
+    <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <div style="font-size: 62px; font-weight: 600; text-align: center;">
+            <div>Is number zero? {num === 0 ? 'Yes' : 'Nope'}</div>
+            <h2>{num}</h2>
+        </div>
+        <div style="display: flex; flex-direction: column; width: 40%">
+            <input @click={onChange}></input>
+            <button @click={onClick}>Increment</button>
+            <button @click={onClickReset}>Reset</button>
+        </div>
+    </div>
+    <Footer />
+</component>

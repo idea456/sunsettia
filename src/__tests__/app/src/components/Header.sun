@@ -1,0 +1,16 @@
+<script>
+    import HeaderTitle from "./HeaderTitle.sun";
+
+    let name = "Sunsettia";
+</script>
+
+<component name="Header">
+    <div style="display: flex; justify-content: space-between">
+        <HeaderTitle name={name} />
+        <div style="display: flex; gap: 16px">
+            <h1>Home</h1>
+            <h1>About</h1>
+            <h1>Contact</h1>
+        </div>
+    </div>
+</component>

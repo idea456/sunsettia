@@ -1,0 +1,7 @@
+<script>
+    import Text from "./base/Text.sun";
+</script>
+
+<component name="HeaderTitle">
+    <h1>Header <Text /></h1>
+</component>

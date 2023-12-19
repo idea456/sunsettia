@@ -1,5 +1,5 @@
 import { NodeType, Program, VisitableNode, VisitableTagNode } from "types";
-import acorn, { Expression } from "acorn";
+import acorn, { Expression, ImportDeclaration } from "acorn";
 import walk from "acorn-walk";
 import escodegen from "escodegen";
 
@@ -30,6 +30,26 @@ export default function analyse(code: string) {
     });
 
     walk.ancestor(tree, {
+        ImportDeclaration(path, _state, ancestors) {
+            const node = path;
+            let index = 0;
+            let parent = ancestors[ancestors.length - 2];
+            for (let i = 0; i < parent.body.length; i++) {
+                const bodyNode = parent.body[i];
+                if (
+                    bodyNode.type === "ImportDeclaration" &&
+                    bodyNode.start === node.start &&
+                    bodyNode.end === node.end
+                ) {
+                    index = i;
+                    break;
+                }
+            }
+            parent.body = [
+                ...parent.body.slice(0, index),
+                ...parent.body.slice(index + 1, parent.body.length),
+            ];
+        },
         ExpressionStatement(path, _state, ancestors) {
             const node = path;
             if (node?.expression.type === "AssignmentExpression") {
@@ -127,6 +147,22 @@ export function link(ast: VisitableTagNode) {
     };
 
     return traverse(ast);
+}
+
+export function analyseImports(code: string) {
+    const tree = acorn.parse(code, {
+        ecmaVersion: "latest",
+        sourceType: "module",
+    });
+    const imports: ImportDeclaration[] = [];
+
+    walk.simple(tree, {
+        ImportDeclaration: (node) => {
+            imports.push(node);
+        },
+    });
+
+    return imports;
 }
 
 // export function appendSemicolons(code: string) {

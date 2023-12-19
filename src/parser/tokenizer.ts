@@ -40,6 +40,7 @@ export class Tokenizer {
     should_reconsume: boolean;
     is_carriage_return: boolean;
     emitter: EventEmitter;
+    line: number;
 
     constructor(text: string) {
         this.text = text + "#";
@@ -50,6 +51,7 @@ export class Tokenizer {
         this.stack = [];
         this.emitter = new EventEmitter();
         this.is_carriage_return = false;
+        this.line = 1;
     }
 
     private isAsciiAlpha(c: string) {
@@ -63,6 +65,10 @@ export class Tokenizer {
 
     private isWhitespace(c: string) {
         return [" ", "\t", "\f", "\n"].includes(c);
+    }
+
+    private isComponentName(c: string) {
+        return c >= "A" && c <= "Z";
     }
 
     private peek() {
@@ -101,7 +107,7 @@ export class Tokenizer {
     }
 
     private emitToken() {
-        console.log("Token emitted", this.current_token);
+        // console.log("Token emitted", this.current_token);
         // this.stream.push(JSON.stringify(this.current_token), "utf-8");
         this.emitter.emit("data", this.current_token);
         if (this.current_token) {
@@ -132,19 +138,20 @@ export class Tokenizer {
 
     async run() {
         let current_char;
-        console.log(`[${this.state}]`, this.peek());
+        // console.log(`[${this.state}]`, this.peek());
         switch (this.state) {
             case State.Data:
                 current_char = this.consume();
                 if (current_char === "<") {
                     this.switch(State.TagOpen);
                 } else if (current_char === EOF) {
-                    this.current_token = new EOFToken();
+                    this.current_token = new EOFToken(this.line);
                     this.emitToken();
                     this.switch(State.End);
                 } else {
                     if (current_char === "\n") {
                         this.is_carriage_return = true;
+                        this.line += 1;
                     }
 
                     if (
@@ -158,7 +165,10 @@ export class Tokenizer {
                             !this.is_carriage_return) ||
                         !["\t", "\n", " "].includes(current_char)
                     ) {
-                        this.current_token = new CharacterToken(current_char);
+                        this.current_token = new CharacterToken(
+                            current_char,
+                            this.line,
+                        );
                         this.emitToken();
                     }
                     this.switch(State.Data);
@@ -169,11 +179,14 @@ export class Tokenizer {
                 if (current_char === "/") {
                     this.switch(State.EndTagOpen);
                 } else if (this.isAsciiAlpha(current_char)) {
+                    let is_component = this.isComponentName(current_char);
                     this.current_token = new StartTagToken(
                         current_char,
                         TokenType.StartTag,
                         false,
                         [],
+                        this.line,
+                        is_component,
                     );
                     // this.should_reconsume = true;
                     this.switch(State.TagName);
@@ -182,7 +195,10 @@ export class Tokenizer {
             case State.EndTagOpen:
                 current_char = this.consume();
                 if (this.isAsciiAlpha(current_char)) {
-                    this.current_token = new EndTagToken(current_char);
+                    this.current_token = new EndTagToken(
+                        current_char,
+                        this.line,
+                    );
                     this.switch(State.TagName);
                 }
                 break;
@@ -288,13 +304,22 @@ export class Tokenizer {
                 break;
             case State.AttributeValueQuoted:
                 current_char = this.consume();
-                if (this.isAsciiAlpha(current_char)) {
+                // if (this.isAsciiAlpha(current_char)) {
+                //     if (!this.current_value) {
+                //         this.current_value = "";
+                //     }
+                //     this.current_value += current_char;
+                //     this.switch(State.AttributeValueQuoted);
+                // } else if (current_char === '"' || current_char === "'") {
+                //     this.switch(State.AfterAttributeValueQuoted);
+                // }
+                if (current_char !== '"' && current_char !== "'") {
                     if (!this.current_value) {
                         this.current_value = "";
                     }
                     this.current_value += current_char;
                     this.switch(State.AttributeValueQuoted);
-                } else if (current_char === '"' || current_char === "'") {
+                } else {
                     this.switch(State.AfterAttributeValueQuoted);
                 }
                 break;
