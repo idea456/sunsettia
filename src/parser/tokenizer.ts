@@ -1,17 +1,5 @@
 import stream, { EventEmitter } from "stream";
 
-import {
-    State,
-    Attribute,
-    CharacterToken,
-    EOFToken,
-    EndTagToken,
-    Expression,
-    StartTagToken,
-    Token,
-    TokenType,
-} from "types";
-
 const EOF = "#";
 
 export class TokenStream extends stream.Readable {

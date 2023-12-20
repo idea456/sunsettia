@@ -1,30 +1,6 @@
-import {
-    Node,
-    NodeType,
-    NodeVisitor,
-    Program,
-    VisitableExpressionNode,
-    VisitableNode,
-    VisitableTagNode,
-    VisitableTextNode,
-} from "types";
-import analyse, { analyseDependencies } from "./analyse";
+import { analyseDependencies } from "./analyse";
 import { TagNode } from "../parser/nodes";
-import { ParseError, ParseErrorType } from "../error/error";
 import analyseScript from "./analyse";
-
-class CreateGeneratingVisitor implements NodeVisitor {
-    code: string[];
-    visitExpression(node: ExpressionNode): void {
-        throw new Error("Method not implemented.");
-    }
-    visitTag(node: TagNode): void {
-        throw new Error("Method not implemented.");
-    }
-    visitText(node: TextNode): void {
-        throw new Error("Method not implemented.");
-    }
-}
 
 export class GeneratingVisitor implements NodeVisitor {
     code: string[];
@@ -33,6 +9,7 @@ export class GeneratingVisitor implements NodeVisitor {
     generated_vars: string[] = [];
     generated_events: string[] = [];
     generated_create_lifecycle: string[] = [];
+    generated_styles: string[] = [];
     generated_declarations: Set<string> = new Set();
 
     constructor() {
@@ -70,6 +47,7 @@ export class GeneratingVisitor implements NodeVisitor {
         node_name: string,
         element_type: string,
         parent_name?: string,
+        is_component?: boolean,
     ) {
         const generated_var_name = this.generateVariableDeclaration(node_name);
         this.generated_create_lifecycle.push(
@@ -84,16 +62,15 @@ export class GeneratingVisitor implements NodeVisitor {
                 `${parent_name}.appendChild(${generated_var_name})`,
             );
         }
+
+        if (is_component)
+            this.generated_create_lifecycle.push(
+                `${generated_var_name}.setAttribute('data-component', '${node_name}')`,
+            );
         return generated_var_name;
     }
 
     visitExpression(node: VisitableExpressionNode): void {
-        // this.code.push(
-        //     `const expr_${this.counter} = document.createTextNode(${node.raw})`,
-        // );
-        // this.code.push(
-        //     `${this.parent_var}.appendChild(${`expr_${this.counter}`})`,
-        // );
         const generated_var_name = this.generateVariableDeclaration("expr");
         this.generated_create_lifecycle.push(
             `${generated_var_name} = document.createTextNode(${node.raw})`,
@@ -114,10 +91,16 @@ export class GeneratingVisitor implements NodeVisitor {
     visitTag(node: VisitableTagNode): void {
         let node_name: string;
         if (node.name === "component") {
+            // @ts-expect-error component name="..." attribute is already validated in Parser
             node_name = node.attributes.find(
                 (attr) => attr.name === "name",
             )?.value;
-            this.parent_var = this.generateElement(node_name, "div");
+            this.parent_var = this.generateElement(
+                node_name,
+                "div",
+                this.parent_var,
+                true,
+            );
             node_name = this.parent_var;
         } else {
             node_name = this.generateElement(
@@ -137,7 +120,7 @@ export class GeneratingVisitor implements NodeVisitor {
                             if (style) {
                                 const styleName = style.trim().split(":")[0];
                                 let styleValue = style.trim().split(":")[1];
-                                this.code.push(
+                                this.generated_styles.push(
                                     `${node_name}.style['${styleName}'] = '${styleValue}'`,
                                 );
                             }
@@ -154,8 +137,6 @@ export class GeneratingVisitor implements NodeVisitor {
                     }
                 }
             }
-            // this.code.push(`${this.parent_var}.appendChild(${node_name})`);
-            // this.counter += 1;
         }
 
         if (node.children.length !== 0) {
@@ -188,9 +169,20 @@ export class GeneratingVisitor implements NodeVisitor {
         this.code = [
             analysedCode,
             ...this.generated_vars,
-            ...this.generated_create_lifecycle,
-            ...this.generated_events,
             ...this.code,
+            `return {
+                create() {
+                    ${[
+                        ...this.generated_create_lifecycle,
+                        ...this.generated_styles,
+                        ...this.generated_events,
+                    ].join("\n")}
+                },
+                destroy() {
+                    const component = document.querySelector('[data-component="Counter_0"]')
+                    document.body.removeChild(component);
+                }
+            }`,
         ];
         return this.code.join("\n");
     }

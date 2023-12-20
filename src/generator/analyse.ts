@@ -1,4 +1,3 @@
-import { NodeType, Program, VisitableNode, VisitableTagNode } from "types";
 import acorn, { Expression, ImportDeclaration } from "acorn";
 import walk from "acorn-walk";
 import escodegen from "escodegen";
@@ -20,7 +19,7 @@ type Assignment = {
  * @param ast
  * @returns
  */
-export default function analyse(code: string) {
+export default function analyseScript(code: string) {
     let declarations: Declaration[] = [];
     let assignments: Assignment[] = [];
     // const code = appendSemicolons(rawCode);

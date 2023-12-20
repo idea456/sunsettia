@@ -50,8 +50,30 @@ let text_8;
 let div_8;
 let h1_8;
 let text_9;
-Counter_0 = document.createElement('div');
+let variableToNodesMapper = new Map();
+ function _invalidate(variable, expr) {
+    const nodes = variableToNodesMapper.get(variable);
+    if (nodes) {
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i]();
+      }
+    }
+  }
+  function _listen(variable, fn) {
+    if (!variableToNodesMapper.has(variable))
+      variableToNodesMapper.set(variable, []);
+    variableToNodesMapper.set(variable, [
+      ...variableToNodesMapper.get(variable),
+      fn,
+    ]);
+  }
+_listen('num', () => expr_6.data = num === 0 ? 'Yes' : 'Nope')
+_listen('num', () => expr_7.data = num)
+return {
+                create() {
+                    Counter_0 = document.createElement('div');
 document.body.appendChild(Counter_0)
+Counter_0.setAttribute('data-component', 'Counter')
 div_0 = document.createElement('div');
 Counter_0.appendChild(div_0)
 h1_0 = document.createElement('h1');
@@ -82,7 +104,7 @@ div_5 = document.createElement('div');
 div_4.appendChild(div_5)
 div_6 = document.createElement('div');
 div_5.appendChild(div_6)
-text_6 = document.createTextNode('Is number zero? ')
+text_6 = document.createTextNode('Is number zerxxo? ')
 div_6.appendChild(text_6)
 expr_6 = document.createTextNode(num === 0 ? 'Yes' : 'Nope')
 div_6.appendChild(expr_6)
@@ -108,26 +130,6 @@ h1_8 = document.createElement('h1');
 div_8.appendChild(h1_8)
 text_9 = document.createTextNode('Footer')
 h1_8.appendChild(text_9)
-input_7.addEventListener('click', onChange);
-button_7.addEventListener('click', onClick);
-button_8.addEventListener('click', onClickReset);
-let variableToNodesMapper = new Map();
- function _invalidate(variable, expr) {
-    const nodes = variableToNodesMapper.get(variable);
-    if (nodes) {
-      for (let i = 0; i < nodes.length; i++) {
-        nodes[i]();
-      }
-    }
-  }
-  function _listen(variable, fn) {
-    if (!variableToNodesMapper.has(variable))
-      variableToNodesMapper.set(variable, []);
-    variableToNodesMapper.set(variable, [
-      ...variableToNodesMapper.get(variable),
-      fn,
-    ]);
-  }
 div_0.style['display'] = ' flex'
 div_0.style['justify-content'] = ' space-between'
 div_1.style['display'] = ' flex'
@@ -139,11 +141,18 @@ div_4.style['align-items'] = ' center'
 div_5.style['font-size'] = ' 62px'
 div_5.style['font-weight'] = ' 600'
 div_5.style['text-align'] = ' center'
-_listen('num', () => expr_6.data = num === 0 ? 'Yes' : 'Nope')
-_listen('num', () => expr_7.data = num)
 div_7.style['display'] = ' flex'
 div_7.style['flex-direction'] = ' column'
 div_7.style['width'] = ' 40%'
 div_8.style['width'] = ' 100vw'
 div_8.style['text-align'] = ' center'
+input_7.addEventListener('click', onChange);
+button_7.addEventListener('click', onClick);
+button_8.addEventListener('click', onClickReset);
+                },
+                destroy() {
+                    const component = document.querySelector('[data-component="Counter_0"]')
+                    document.body.removeChild(component);
+                }
+            }
 }

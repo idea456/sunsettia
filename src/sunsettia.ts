@@ -1,21 +1,27 @@
-import { Node, NodeType, TextNode } from "types";
+import fs from "fs";
+import { BaseError, BaseErrorType } from "./error";
+import { Parser } from "./parser";
+import { GeneratingVisitor } from "./generator";
+import { getConfigFile } from "./utils";
 
 class Sunsettia {
-    constructor() {}
+    static async compile() {
+        let config = getConfigFile();
+        let entryPath = config?.entry;
+        if (!entryPath)
+            throw new BaseError(BaseErrorType.NoEntrySpecifiedError);
 
-    static render(target: Node, parent: HTMLElement) {
-        let element;
-        if (target.type === NodeType.Tag) {
-            element = document.createElement(target.name);
-            for (let i = 0; i < target.children.length; i++) {
-                this.render(target.children[i], element);
-            }
-        } else if (target.type === NodeType.Text) {
-            // TODO: Check if its an expression
-            element = document.createTextNode((target as TextNode).value);
-        }
+        const text = fs.readFileSync(entryPath, "utf-8");
+        const parser = new Parser(text);
+        await parser.parse();
 
-        if (element) parent.appendChild(element);
+        const generator = new GeneratingVisitor();
+        generator.generate(parser.ast);
+
+        fs.writeFileSync(
+            config?.outDir || "./app.js",
+            `export default function() {\n${generator.code.join("\n")}\n}`,
+        );
     }
 }
 

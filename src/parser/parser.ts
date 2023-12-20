@@ -1,13 +1,3 @@
-import {
-    CharacterToken,
-    StartTagToken,
-    Token,
-    TokenType,
-    NodeType,
-    Program,
-    Node,
-    VisitableNode,
-} from "types";
 import { Tokenizer } from "./tokenizer";
 import { ExpressionNode, TagNode, TextNode } from "./nodes";
 import { ParseError, ParseErrorType } from "../error/error";
@@ -15,10 +5,6 @@ import { readFileSync } from "fs";
 import { ImportDeclaration } from "acorn";
 import { analyseImports } from "../generator/analyse";
 import path from "path";
-
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 enum ParseMode {
     Init = "Init",
@@ -87,6 +73,27 @@ export class Parser {
         });
         this.tokenizer.run();
         await this.wait();
+    }
+
+    parseWait() {
+        return new Promise((resolve, reject) => {
+            this.tokenizer.emitter.on("data", (data) => {
+                const token = data as Token;
+                if (token) {
+                    if (token.type === TokenType.EOF) {
+                        this.tokenizer.emitter.emit("done");
+                    } else {
+                        try {
+                            this.process(token);
+                        } catch (err) {
+                            reject(err);
+                        }
+                    }
+                }
+            });
+            this.tokenizer.emitter.on("done", resolve);
+            this.tokenizer.run();
+        });
     }
 
     process(token: Token) {
@@ -182,7 +189,7 @@ export class Parser {
                         if (importNode) {
                             const absolutePathToComponent = path.resolve(
                                 path.dirname(this.current_dirname),
-                                importNode.source.value,
+                                importNode.source.value as string,
                             );
 
                             const text = readFileSync(

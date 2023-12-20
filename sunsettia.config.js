@@ -1,3 +1,3 @@
 module.exports = {
-    entry: "./src/app/index.sun",
+    entry: "./src/__tests__/app/src/index.sun",
 };

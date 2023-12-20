@@ -1,14 +1,4 @@
 import acorn from "acorn";
-import {
-    Attribute,
-    NodeType,
-    NodeVisitor,
-    VisitableNode,
-    VisitableTagNode,
-    VisitableTextNode,
-    VisitableExpressionNode,
-} from "types";
-
 /**
  * Implement tree traversal for rendering using React's fiber tree traversal way of singly-linked pointers.
  * This allows a way to emulate the call stack and pause/resume execution of traversal without relying on recursion's call stack.
@@ -46,6 +36,8 @@ export class TagNode implements VisitableTagNode {
     type: NodeType.Tag = NodeType.Tag;
     attributes: Attribute[];
     name: string;
+    props?: Attribute[];
+
     child?: VisitableNode;
     sibling?: VisitableNode;
     return?: VisitableNode;
