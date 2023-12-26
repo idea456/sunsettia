@@ -1,20 +1,14 @@
-import { type Expression } from "acorn";
+import { type Expression as AcornExpression } from "acorn";
 
 declare global {
     export type Program = {
         code: string;
-        component?: Node;
+        component?: VisitableNode;
     };
 
     export type Component = {
         body: Node[];
     };
-
-    export enum NodeType {
-        Tag = "Tag",
-        Text = "Text",
-        Expression = "Expression",
-    }
 
     export interface Visitable {
         accept(visitor: NodeVisitor): void;
@@ -22,13 +16,13 @@ declare global {
 
     export interface VisitableNode extends Visitable {
         name: "$$text" | "$$expr" | string;
-        type: NodeType;
+        type: NodeType.Expression | NodeType.Tag | NodeType.Text;
 
         child?: VisitableNode;
         sibling?: VisitableNode;
         return?: VisitableNode;
 
-        children?: VisitableNode[];
+        children: VisitableNode[];
 
         accept(visitor: NodeVisitor): void;
     }
@@ -49,7 +43,7 @@ declare global {
     export interface VisitableExpressionNode extends VisitableNode {
         name: "$$expr";
         type: NodeType.Expression;
-        expression: Expression;
+        expression: AcornExpression;
         raw: string;
     }
 
@@ -57,33 +51,6 @@ declare global {
         | VisitableTagNode
         | VisitableTextNode
         | VisitableExpressionNode;
-
-    export enum State {
-        Data = "Data",
-        TagOpen = "TagOpen",
-        EndTagOpen = "EndTagOpen",
-        TagName = "TagName",
-        InScriptTag = "InScriptTag",
-        SelfClosingStartTag = "SelfClosingStartTag",
-        BeforeAttributeName = "BeforeAttributeName",
-        AttributeName = "AttributeName",
-        AfterAttributeName = "AfterAttributeName",
-        BeforeAttributeValue = "BeforeAttributeValue",
-        AttributeValueQuoted = "AttributeValueQuoted",
-        AttributeValueExpression = "AttributeValueExpression",
-        AfterAttributeValueQuoted = "AfterAttributeValueQuoted",
-        AfterAttributeValueExpression = "AfterAttributeValueExpression",
-        End = "End",
-    }
-
-    export enum TokenType {
-        StartTag = "StartTag",
-        EndTag = "EndTag",
-        ScriptTag = "ScriptTag",
-        Comment = "Comment",
-        Character = "Character",
-        EOF = "EOF",
-    }
 
     export interface Token {
         name: string;

@@ -1,4 +1,7 @@
+import Sunsettia from "./sunsettia";
+
 export * from "./parser";
 export * from "./generator";
-export * from "./sunsettia";
-export * from "./server";
+// export * from "./server";
+
+export default Sunsettia;

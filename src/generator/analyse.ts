@@ -1,14 +1,21 @@
-import acorn, { Expression, ImportDeclaration } from "acorn";
-import walk from "acorn-walk";
+import {
+    parse,
+    type AssignmentExpression,
+    VariableDeclarator,
+    Program as AcornProgram,
+    Expression as AcornExpression,
+    ImportDeclaration,
+} from "acorn";
+import { ancestor, simple } from "acorn-walk";
 import escodegen from "escodegen";
 
 type Declaration = {
-    expression: acorn.VariableDeclarator;
+    expression: VariableDeclarator;
     raw?: string;
 };
 
 type Assignment = {
-    expression: acorn.AssignmentExpression;
+    expression: AssignmentExpression;
     raw?: string;
 };
 
@@ -23,16 +30,16 @@ export default function analyseScript(code: string) {
     let declarations: Declaration[] = [];
     let assignments: Assignment[] = [];
     // const code = appendSemicolons(rawCode);
-    const tree = acorn.parse(code, {
+    const tree = parse(code, {
         ecmaVersion: "latest",
         sourceType: "module",
     });
 
-    walk.ancestor(tree, {
+    ancestor(tree, {
         ImportDeclaration(path, _state, ancestors) {
             const node = path;
             let index = 0;
-            let parent = ancestors[ancestors.length - 2];
+            let parent = ancestors[ancestors.length - 2] as AcornProgram;
             for (let i = 0; i < parent.body.length; i++) {
                 const bodyNode = parent.body[i];
                 if (
@@ -52,6 +59,7 @@ export default function analyseScript(code: string) {
         ExpressionStatement(path, _state, ancestors) {
             const node = path;
             if (node?.expression.type === "AssignmentExpression") {
+                //@ts-expect-error
                 let dependency = node.expression.left.name;
                 let invalidateExpr = {
                     type: "ExpressionStatement",
@@ -72,7 +80,7 @@ export default function analyseScript(code: string) {
                     },
                 };
                 let index = 0;
-                let parent = ancestors[ancestors.length - 2];
+                let parent = ancestors[ancestors.length - 2] as AcornProgram;
                 for (let i = 0; i < parent.body.length; i++) {
                     const bodyNode = parent.body[i];
                     if (
@@ -84,6 +92,7 @@ export default function analyseScript(code: string) {
                         break;
                     }
                 }
+                // @ts-expect-error
                 parent.body[index] = invalidateExpr;
             }
         },
@@ -98,9 +107,9 @@ export default function analyseScript(code: string) {
     };
 }
 
-export function analyseDependencies(expression: Expression) {
+export function analyseDependencies(expression: AcornExpression) {
     let dependencies: string[] = [];
-    walk.simple(expression, {
+    simple(expression, {
         Identifier: (node) => {
             dependencies.push(node.name);
         },
@@ -149,13 +158,13 @@ export function link(ast: VisitableTagNode) {
 }
 
 export function analyseImports(code: string) {
-    const tree = acorn.parse(code, {
+    const tree = parse(code, {
         ecmaVersion: "latest",
         sourceType: "module",
     });
     const imports: ImportDeclaration[] = [];
 
-    walk.simple(tree, {
+    simple(tree, {
         ImportDeclaration: (node) => {
             imports.push(node);
         },

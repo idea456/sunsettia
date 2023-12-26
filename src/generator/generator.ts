@@ -83,7 +83,7 @@ export class GeneratingVisitor implements NodeVisitor {
         const dependencies = analyseDependencies(node.expression);
         dependencies.forEach((variable) => {
             this.code.push(
-                `_listen('${variable}', () => expr_${this.counter}.data = ${node.raw})`,
+                `_listen('${variable}', () => expr_${this.counter}.data = ${node.raw});`,
             );
         });
     }
@@ -121,7 +121,7 @@ export class GeneratingVisitor implements NodeVisitor {
                                 const styleName = style.trim().split(":")[0];
                                 let styleValue = style.trim().split(":")[1];
                                 this.generated_styles.push(
-                                    `${node_name}.style['${styleName}'] = '${styleValue}'`,
+                                    `${node_name}.style['${styleName}'] = '${styleValue}';`,
                                 );
                             }
                         });
@@ -152,11 +152,11 @@ export class GeneratingVisitor implements NodeVisitor {
     visitText(node: VisitableTextNode): void {
         const generated_var_name = this.generateVariableDeclaration("text");
         this.generated_create_lifecycle.push(
-            `${generated_var_name} = document.createTextNode('${node.value}')`,
+            `${generated_var_name} = document.createTextNode('${node.value};')`,
         );
 
         this.generated_create_lifecycle.push(
-            `${this.parent_var}.appendChild(${generated_var_name})`,
+            `${this.parent_var}.appendChild(${generated_var_name});`,
         );
     }
 
@@ -179,7 +179,7 @@ export class GeneratingVisitor implements NodeVisitor {
                     ].join("\n")}
                 },
                 destroy() {
-                    const component = document.querySelector('[data-component="Counter_0"]')
+                    const component = document.querySelector('[data-component="Counter_0"]');
                     document.body.removeChild(component);
                 }
             }`,

@@ -35,7 +35,7 @@
     <Header />
     <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div style="font-size: 62px; font-weight: 600; text-align: center;">
-            <div>Is number zero? {num === 0 ? 'Yes' : 'Nope'}</div>
+            <div>Is numbesr zero? {num === 0 ? 'Yes' : 'Nope'}</div>
             <h2>{num}</h2>
         </div>
         <div style="display: flex; flex-direction: column; width: 40%">

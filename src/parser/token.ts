@@ -1,15 +1,15 @@
-export enum TokenType {
-    StartTag = "StartTag",
-    EndTag = "EndTag",
-    ScriptTag = "ScriptTag",
-    Comment = "Comment",
-    Character = "Character",
-    EOF = "EOF",
-}
+export const TokenType = {
+    StartTag: "StartTag",
+    EndTag: "EndTag",
+    ScriptTag: "ScriptTag",
+    Comment: "Comment",
+    Character: "Character",
+    EOF: "EOF",
+} as const;
 
 export interface Token {
     name: string;
-    type: TokenType;
+    type: keyof typeof TokenType;
     literal?: string;
     line: number;
 }
@@ -28,7 +28,7 @@ export class StartTagToken implements Token {
     // Start and end tag tokens have a tag name, a self-closing flag, and a list of attributes, each of which has a name and a value.
     constructor(
         public name: string,
-        public type: TokenType.StartTag | TokenType.EndTag,
+        public type: typeof TokenType.StartTag,
         public self_closing: boolean,
         public attributes: Attribute[],
         public line: number,

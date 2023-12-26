@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { Tokenizer } from "../parser";
-import { StartTagToken, TokenType } from "../parser/token";
+import { Tokenizer } from "../src/parser";
+import { StartTagToken, TokenType } from "../src/parser/token";
 
 const text = `
     <component name="Header" lazy={is_mobile} server>

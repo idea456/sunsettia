@@ -104,7 +104,7 @@ div_5 = document.createElement('div');
 div_4.appendChild(div_5)
 div_6 = document.createElement('div');
 div_5.appendChild(div_6)
-text_6 = document.createTextNode('Is number zerxxo? ')
+text_6 = document.createTextNode('Is numbesr zero? ')
 div_6.appendChild(text_6)
 expr_6 = document.createTextNode(num === 0 ? 'Yes' : 'Nope')
 div_6.appendChild(expr_6)

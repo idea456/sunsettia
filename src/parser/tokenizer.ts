@@ -1,25 +1,52 @@
-import stream, { EventEmitter } from "stream";
+// import { EventEmitter } from "stream";
+import {
+    StartTagToken,
+    CharacterToken,
+    EndTagToken,
+    EOFToken,
+    TokenType,
+} from "./token";
 
 const EOF = "#";
 
-export class TokenStream extends stream.Readable {
-    _read() {}
+const State = {
+    Data: "Data",
+    TagOpen: "TagOpen",
+    EndTagOpen: "EndTagOpen",
+    TagName: "TagName",
+    InScriptTag: "InScriptTag",
+    SelfClosingStartTag: "SelfClosingStartTag",
+    BeforeAttributeName: "BeforeAttributeName",
+    AttributeName: "AttributeName",
+    AfterAttributeName: "AfterAttributeName",
+    BeforeAttributeValue: "BeforeAttributeValue",
+    AttributeValueQuoted: "AttributeValueQuoted",
+    AttributeValueExpression: "AttributeValueExpression",
+    AfterAttributeValueQuoted: "AfterAttributeValueQuoted",
+    AfterAttributeValueExpression: "AfterAttributeValueExpression",
+    End: "End",
+} as const;
 
-    done() {
-        this.emit("end");
+export class TokenEmitter {
+    listeners: ((token: Token) => void)[] = [];
+
+    emit(token: Token) {
+        this.listeners.forEach((listener) => listener(token));
     }
 
-    process() {
-        return new Promise((resolve) => {
-            this.on("end", resolve);
-        });
+    subscribe(listener: (token: Token) => void) {
+        this.listeners.push(listener);
+    }
+
+    close() {
+        this.listeners = [];
     }
 }
 
 export class Tokenizer {
     text: string;
     current: number;
-    state: State;
+    state: keyof typeof State;
     stack: Token[];
     tokens: Token[];
     current_token: Token | null = null;
@@ -27,7 +54,8 @@ export class Tokenizer {
     current_value: Expression | string | null = null;
     should_reconsume: boolean;
     is_carriage_return: boolean;
-    emitter: EventEmitter;
+    // emitter: EventEmitter;
+    emitter: TokenEmitter;
     line: number;
 
     constructor(text: string) {
@@ -37,7 +65,7 @@ export class Tokenizer {
         this.tokens = [];
         this.should_reconsume = true;
         this.stack = [];
-        this.emitter = new EventEmitter();
+        this.emitter = new TokenEmitter();
         this.is_carriage_return = false;
         this.line = 1;
     }
@@ -89,7 +117,7 @@ export class Tokenizer {
         return true;
     }
 
-    private switch(state: State) {
+    private switch(state: keyof typeof State) {
         this.state = state;
         this.run();
     }
@@ -97,8 +125,9 @@ export class Tokenizer {
     private emitToken() {
         // console.log("Token emitted", this.current_token);
         // this.stream.push(JSON.stringify(this.current_token), "utf-8");
-        this.emitter.emit("data", this.current_token);
+        // this.emitter.emit("data", this.current_token);
         if (this.current_token) {
+            this.emitter.emit(this.current_token);
             this.tokens.push(this.current_token);
             if (this.current_token.type === TokenType.StartTag) {
                 this.stack.push(this.current_token);

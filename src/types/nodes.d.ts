@@ -1,4 +1,3 @@
-import { Attribute } from "./token";
 import { type Expression } from "acorn";
 
 export type Program = {
@@ -10,11 +9,11 @@ export type Component = {
     body: Node[];
 };
 
-export enum NodeType {
-    Tag = "Tag",
-    Text = "Text",
-    Expression = "Expression",
-}
+export const NodeType = {
+    Tag: "Tag",
+    Text: "Text",
+    Expression: "Expression",
+} as const;
 
 export interface Visitable {
     accept(visitor: NodeVisitor): void;
@@ -22,7 +21,7 @@ export interface Visitable {
 
 export interface VisitableNode extends Visitable {
     name: "$$text" | "$$expr" | string;
-    type: NodeType;
+    type: typeof NodeType;
 
     child?: VisitableNode;
     sibling?: VisitableNode;

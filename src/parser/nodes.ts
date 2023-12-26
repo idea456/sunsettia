@@ -1,4 +1,11 @@
-import acorn from "acorn";
+import { type Expression as AcornExpression, parseExpressionAt } from "acorn";
+
+export const NodeType = {
+    Tag: "Tag",
+    Text: "Text",
+    Expression: "Expression",
+} as const;
+
 /**
  * Implement tree traversal for rendering using React's fiber tree traversal way of singly-linked pointers.
  * This allows a way to emulate the call stack and pause/resume execution of traversal without relying on recursion's call stack.
@@ -10,19 +17,21 @@ import acorn from "acorn";
 export class ExpressionNode implements VisitableExpressionNode {
     name = "$$expr" as const;
     // for analysis
-    expression: acorn.Expression;
+    expression: AcornExpression;
     // for generation
     raw: string;
-    type: NodeType.Expression = NodeType.Expression;
+    type = NodeType.Expression;
 
     child?: VisitableNode;
     sibling?: VisitableNode;
     return?: VisitableNode;
 
+    children: VisitableNode[] = [];
+
     constructor(raw: string) {
         this.name = "$$expr";
         this.raw = raw;
-        this.expression = acorn.parseExpressionAt(raw, 0, {
+        this.expression = parseExpressionAt(raw, 0, {
             ecmaVersion: "latest",
         });
     }
@@ -33,7 +42,7 @@ export class ExpressionNode implements VisitableExpressionNode {
 }
 
 export class TagNode implements VisitableTagNode {
-    type: NodeType.Tag = NodeType.Tag;
+    type = NodeType.Tag;
     attributes: Attribute[];
     name: string;
     props?: Attribute[];
@@ -57,11 +66,13 @@ export class TagNode implements VisitableTagNode {
 
 export class TextNode implements VisitableTextNode {
     name = "$$text" as const;
-    type: NodeType.Text = NodeType.Text;
+    type = NodeType.Text;
     child?: VisitableNode;
     sibling?: VisitableNode;
     return?: VisitableNode;
     value: string;
+
+    children: VisitableNode[] = [];
 
     constructor(value: string) {
         this.value = value;

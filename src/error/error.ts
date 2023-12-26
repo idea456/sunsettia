@@ -1,3 +1,5 @@
+import { TokenType } from "../parser/token";
+
 export const ParseErrorType = {
     UnmatchedTagError: "UnmatchedTagError",
     NoComponentNameError: "NoComponentNameError",
@@ -22,7 +24,10 @@ export class ParseError implements Error {
         this.type = type;
         switch (type) {
             case ParseErrorType.UnmatchedTagError:
-                this.message = `Unmatched tag ${token.literal} at line ${token.line}.`;
+                this.message = `Unmatched tag <${token.name}${
+                    token.type === TokenType.EndTag ? "/>" : ">"
+                } at line ${token.line}.`;
+                break;
             default:
                 this.message = "";
         }
