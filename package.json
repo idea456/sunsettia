@@ -1,6 +1,6 @@
 {
     "name": "sunsettia",
-    "version": "0.0.2-beta",
+    "version": "0.0.4-beta",
     "access": "public",
     "description": "A toy frontend compiler inspired by Svelte",
     "private": false,
