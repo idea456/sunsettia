@@ -1,12 +1,12 @@
 {
     "name": "sunsettia",
-    "version": "0.0.4-beta",
+    "version": "0.0.5-beta",
     "access": "public",
     "description": "A toy frontend compiler inspired by Svelte",
     "private": false,
     "main": "./dist/index.js",
     "module": "./dist/index.mjs",
-    "types": "./dist/sunsettia.d.ts",
+    "types": "./dist/index.d.ts",
     "files": [
         "./dist"
     ],
@@ -14,7 +14,7 @@
         "test": "vitest",
         "dev": "tsx watch ./src/index.ts",
         "coverage": "vitest run --coverage",
-        "build": "tsup ./src --format esm,cjs --dts --cjsInterop",
+        "build": "tsup ./src/index.ts --dts",
         "lint": "tsc",
         "publish": "npm run ci && changeset publish",
         "ci": "npm run lint && npm run coverage && npm run build"
