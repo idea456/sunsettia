@@ -1,0 +1,22 @@
+<script>
+    let n = 0;
+    let hasBoosted = false;
+
+    function onClickIncrement() {
+        n += hasBoosted ? 100 : 1;
+    }
+
+    function onClickBoost() {
+        hasBoosted = true;
+    }
+</script>
+
+<component name="Counter">
+    <div style="display: flex; flex-direction: column;">
+        <h1>The number is {n}.</h1>
+        <div style="display: flex; gap: 10px">
+            <button @click={onClickIncrement}>Increment</button>
+            <button @click={onClickBoost}>Boost</button>
+        </div>
+    </div>
+</component>

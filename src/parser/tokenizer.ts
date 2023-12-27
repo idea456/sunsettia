@@ -1,58 +1,62 @@
-import stream from "stream";
-import { once } from "events";
-import { State } from "./state";
+// import { EventEmitter } from "stream";
 import {
-    Attribute,
-    CharacterToken,
-    EOFToken,
-    EndTagToken,
-    Expression,
     StartTagToken,
-    Token,
+    CharacterToken,
+    EndTagToken,
+    EOFToken,
     TokenType,
 } from "./token";
 
 const EOF = "#";
 
-class TokenStream extends stream.Readable {
-    _read() {}
-}
+const State = {
+    Data: "Data",
+    TagOpen: "TagOpen",
+    EndTagOpen: "EndTagOpen",
+    TagName: "TagName",
+    InScriptTag: "InScriptTag",
+    SelfClosingStartTag: "SelfClosingStartTag",
+    BeforeAttributeName: "BeforeAttributeName",
+    AttributeName: "AttributeName",
+    AfterAttributeName: "AfterAttributeName",
+    BeforeAttributeValue: "BeforeAttributeValue",
+    AttributeValueQuoted: "AttributeValueQuoted",
+    AttributeValueExpression: "AttributeValueExpression",
+    AfterAttributeValueQuoted: "AfterAttributeValueQuoted",
+    AfterAttributeValueExpression: "AfterAttributeValueExpression",
+    End: "End",
+} as const;
 
-class TreeBuilder {
-    token_stream: TokenStream;
-    ast: Object | null;
-    stack: StartTagToken[];
+export class TokenEmitter {
+    listeners: ((token: Token) => void)[] = [];
 
-    constructor(token_stream: TokenStream) {
-        this.token_stream = token_stream;
-        this.stack = [];
-        this.ast = {};
+    emit(token: Token) {
+        this.listeners.forEach((listener) => listener(token));
     }
 
-    async process() {
-        this.token_stream.on("data", (c) => {
-            const token = JSON.parse(c.toString("utf-8")) as Token;
-            if (token.type === TokenType.StartTag) {
-                this.stack.push();
-            }
-        });
-        await once(this.token_stream, "finish");
-        console.log("Tree building finished!");
+    subscribe(listener: (token: Token) => void) {
+        this.listeners.push(listener);
+    }
+
+    close() {
+        this.listeners = [];
     }
 }
 
 export class Tokenizer {
     text: string;
     current: number;
-    state: State;
+    state: keyof typeof State;
     stack: Token[];
     tokens: Token[];
     current_token: Token | null = null;
     current_attribute: Attribute | null = null;
     current_value: Expression | string | null = null;
     should_reconsume: boolean;
-    builder: TreeBuilder;
-    stream: TokenStream;
+    is_carriage_return: boolean;
+    // emitter: EventEmitter;
+    emitter: TokenEmitter;
+    line: number;
 
     constructor(text: string) {
         this.text = text + "#";
@@ -61,9 +65,9 @@ export class Tokenizer {
         this.tokens = [];
         this.should_reconsume = true;
         this.stack = [];
-        this.stream = new TokenStream();
-        this.builder = new TreeBuilder(this.stream);
-        this.builder.process();
+        this.emitter = new TokenEmitter();
+        this.is_carriage_return = false;
+        this.line = 1;
     }
 
     private isAsciiAlpha(c: string) {
@@ -77,6 +81,10 @@ export class Tokenizer {
 
     private isWhitespace(c: string) {
         return [" ", "\t", "\f", "\n"].includes(c);
+    }
+
+    private isComponentName(c: string) {
+        return c >= "A" && c <= "Z";
     }
 
     private peek() {
@@ -109,15 +117,17 @@ export class Tokenizer {
         return true;
     }
 
-    private switch(state: State) {
+    private switch(state: keyof typeof State) {
         this.state = state;
         this.run();
     }
 
     private emitToken() {
-        console.log("Token emitted", this.current_token);
-        this.stream.push(JSON.stringify(this.current_token), "utf-8");
+        // console.log("Token emitted", this.current_token);
+        // this.stream.push(JSON.stringify(this.current_token), "utf-8");
+        // this.emitter.emit("data", this.current_token);
         if (this.current_token) {
+            this.emitter.emit(this.current_token);
             this.tokens.push(this.current_token);
             if (this.current_token.type === TokenType.StartTag) {
                 this.stack.push(this.current_token);
@@ -143,26 +153,39 @@ export class Tokenizer {
         }
     }
 
-    run() {
+    async run() {
         let current_char;
-        console.log(`[${this.state}]`, this.peek());
+        // console.log(`[${this.state}]`, this.peek());
         switch (this.state) {
             case State.Data:
                 current_char = this.consume();
                 if (current_char === "<") {
                     this.switch(State.TagOpen);
                 } else if (current_char === EOF) {
-                    this.current_token = new EOFToken();
+                    this.current_token = new EOFToken(this.line);
                     this.emitToken();
                     this.switch(State.End);
                 } else {
+                    if (current_char === "\n") {
+                        this.is_carriage_return = true;
+                        this.line += 1;
+                    }
+
                     if (
-                        (current_char === " " &&
-                            this.tokens[this.tokens.length - 1]?.type ===
-                                TokenType.Character) ||
+                        !this.isWhitespace(current_char) &&
+                        this.is_carriage_return
+                    ) {
+                        this.is_carriage_return = false;
+                    }
+                    if (
+                        ([" "].includes(current_char) &&
+                            !this.is_carriage_return) ||
                         !["\t", "\n", " "].includes(current_char)
                     ) {
-                        this.current_token = new CharacterToken(current_char);
+                        this.current_token = new CharacterToken(
+                            current_char,
+                            this.line,
+                        );
                         this.emitToken();
                     }
                     this.switch(State.Data);
@@ -173,11 +196,14 @@ export class Tokenizer {
                 if (current_char === "/") {
                     this.switch(State.EndTagOpen);
                 } else if (this.isAsciiAlpha(current_char)) {
+                    let is_component = this.isComponentName(current_char);
                     this.current_token = new StartTagToken(
                         current_char,
                         TokenType.StartTag,
                         false,
                         [],
+                        this.line,
+                        is_component,
                     );
                     // this.should_reconsume = true;
                     this.switch(State.TagName);
@@ -186,7 +212,10 @@ export class Tokenizer {
             case State.EndTagOpen:
                 current_char = this.consume();
                 if (this.isAsciiAlpha(current_char)) {
-                    this.current_token = new EndTagToken(current_char);
+                    this.current_token = new EndTagToken(
+                        current_char,
+                        this.line,
+                    );
                     this.switch(State.TagName);
                 }
                 break;
@@ -292,13 +321,22 @@ export class Tokenizer {
                 break;
             case State.AttributeValueQuoted:
                 current_char = this.consume();
-                if (this.isAsciiAlpha(current_char)) {
+                // if (this.isAsciiAlpha(current_char)) {
+                //     if (!this.current_value) {
+                //         this.current_value = "";
+                //     }
+                //     this.current_value += current_char;
+                //     this.switch(State.AttributeValueQuoted);
+                // } else if (current_char === '"' || current_char === "'") {
+                //     this.switch(State.AfterAttributeValueQuoted);
+                // }
+                if (current_char !== '"' && current_char !== "'") {
                     if (!this.current_value) {
                         this.current_value = "";
                     }
                     this.current_value += current_char;
                     this.switch(State.AttributeValueQuoted);
-                } else if (current_char === '"' || current_char === "'") {
+                } else {
                     this.switch(State.AfterAttributeValueQuoted);
                 }
                 break;
@@ -371,7 +409,7 @@ export class Tokenizer {
                 }
                 break;
             case State.End:
-                console.log("done");
+                this.emitToken();
                 return;
         }
     }

@@ -1,11 +1,7 @@
-import { Tokenizer } from "./parser";
-import fs from "fs";
+import Sunsettia from "./sunsettia";
 
-function main() {
-    const text = fs.readFileSync("index.html", "utf-8");
-    const tokenizer = new Tokenizer(text);
-    tokenizer.run();
-    console.log("Tokenizer results");
-}
+export * from "./parser";
+export * from "./generator";
+// export * from "./server";
 
-main();
+export default Sunsettia;
