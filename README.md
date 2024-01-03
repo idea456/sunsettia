@@ -165,4 +165,5 @@ Sunsettia.render(root)
 
 ## Credits
 Huge credits to @tanhauhau for providing a base guide on making a Svelte-like framework as well as explaining Svelte's compiling process: https://github.com/tanhauhau/mini-svelte
+
 Credits to @pomber on his blog on how React's fiber tree is constructed and traversed: https://pomb.us/build-your-own-react/
