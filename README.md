@@ -53,34 +53,6 @@ Sunsettia will wrap `n += 1` in an invalidate function, which notifies all the r
 Event handlers must be declared and prefixed using `@` syntax. For instance, to add an on click listener to a button, it must be prefixed with `@` like `@click={...}`.
 
 
-
-## Roadmap
-
-- Add conditional rendering with control flow syntax
-```html
-<if condition={num === 0}>
-   <h1>No number</h1>
-</if>
-<elif condition={num === 1>
-   <h1>Number is once.</h1>
-</elif>
-<else>
-   <h1> Number is {num}.</h1>
-</else>
-```
-
-- Add suppport for runtime rendering
-```js
-const root = document.getElementById('root')
-Sunsettia.render(root)
-```
-
-- Integrate lazy loading
-```html
-<div lazy>
-    <h1>I'm not loaded yet</h1>
-</div>
-```
 ## How it works
 
 Sunsettia is a compile-time framework, which means that it generates all of the steps required to build the DOM tree and renders them accordingly from top to bottom according to your code. 
@@ -113,3 +85,30 @@ export default function() {
 }
 ```
 
+## Roadmap
+
+- Add conditional rendering with control flow syntax
+```html
+<if condition={num === 0}>
+   <h1>No number</h1>
+</if>
+<elif condition={num === 1>
+   <h1>Number is once.</h1>
+</elif>
+<else>
+   <h1> Number is {num}.</h1>
+</else>
+```
+
+- Add suppport for runtime rendering
+```js
+const root = document.getElementById('root')
+Sunsettia.render(root)
+```
+
+- Integrate lazy loading
+```html
+<div lazy>
+    <h1>I'm not loaded yet</h1>
+</div>
+```
