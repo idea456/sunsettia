@@ -8,7 +8,10 @@ A simple language for the frontend, Sunsettia is a frontend compiler that focuse
 Inspired by the Svelte and React lifecycle, Sunsettia aims to provide a more readable syntax and ease of managing reactivity.
 
 
+## Why create this?
+I wanted to understand how a frontend framework abstracts the logic of rendering/compiling a DOM tree from a domain-specific language like tsx and Svelte, as well as handling reactivity and state mounting/updates in the tree.
 
+Overall this is just a fun toy project that I build just to understand Svelte's compiling process and React's fiber tree, and it is in no ways its suitable for production environment. I learned a lot from building this, and I plan to keep expanding it with other features such as conditional rendering, component imports and lazy loading. 
 
 ## Installation
 
@@ -159,3 +162,7 @@ Sunsettia.render(root)
     <h1>I'm not loaded yet</h1>
 </div>
 ```
+
+## Credits
+Huge credits to @tanhauhau for providing a base guide on making a Svelte-like framework as well as explaining Svelte's compiling process: https://github.com/tanhauhau/mini-svelte
+Credits to @pomber on his blog on how React's fiber tree is constructed and traversed: https://pomb.us/build-your-own-react/
