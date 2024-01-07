@@ -15,7 +15,7 @@ To install Sunsettia:
   npm install sunsettia
 ```
 
-Sunsettia supports only Node version > 15.
+Sunsettia currently only supports Node version > 15.
     
 ## Usage/Examples
 
@@ -28,7 +28,7 @@ Components are declared with the `<component>` tag. The `name` property, which s
     <button @click={onClick}>Increment</button>
 </component>
 ```
-This specifies that this is a component named `App`. There are no exports required.
+This specifies that this component is declared as `<App />` based on the name property provided. There are no exports required.
 
 Variable mutations are reactive by default. Sunsettia automatically detects mutations in variables and ensures that it is reactive and binded to the DOM. For instance:
 ```html
