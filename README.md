@@ -18,7 +18,7 @@ To install Sunsettia:
 Sunsettia currently only supports Node version > 15.
 
 ⚠️ The development server is currently being developed and is still in alpha version, thus at the time being, to receive the parsed code, simply call `compileRaw` like:
-```
+```jsx
 import Sunsettia from 'sunsettia'
 
 const FILE = `
